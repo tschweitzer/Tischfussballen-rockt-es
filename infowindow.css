@@ -1,0 +1,40 @@
+.iw {
+    font-family: Arial,sans-serif;
+    font-size: 13px;
+}
+.iw .stars {
+    font-size: 0;
+    height: 12px;
+}
+.iw .rev {
+    line-height: 12px;
+    padding: 0;
+}
+.iw .rev a:link {
+    color: #4272DB;
+    text-decoration: none;
+}
+.iw .rev a:hover {
+    color: #4272DB;
+    text-decoration: underline;
+}
+.iw .title {
+    font-size: 123%;
+    font-weight: bold;
+    margin-bottom: 0;
+}
+.iw .basicinfo {
+    max-width: 250px;
+    padding-top: 0.5em;
+}
+.iw {
+    padding: 0 10px 0 0;
+    text-align: left;
+}
+.iw .rev {
+    direction: ltr;
+}
+.iw .stars {
+    background: url("http://maps.gstatic.com/mapfiles/place_info_stars.png") no-repeat scroll left -12px transparent;
+    float: left;
+}

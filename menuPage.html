@@ -1,0 +1,47 @@
+
+	<div data-role="page">
+	
+		<div data-role="header" data-theme="d">
+			<h1>Menu</h1>
+		</div>
+
+		<div data-role="content" data-theme="c">
+			<h1>Menu</h1>
+			<p>You may do some settings here or perform stuff.</p>
+			
+			<label for="flip-a">Select slider:</label>
+			<select name="slider" id="flip-a" data-role="slider">
+				<option value="off">Off</option>
+				<option value="on">On</option>
+			</select>
+			
+			<label for="slider-0">Input slider:</label>
+		    <input type="range" name="slider" id="slider-0" value="25" min="0" max="100"  />
+		    
+		    <fieldset data-role="controlgroup">
+			   <legend>Agree to the terms:</legend>
+			   <input type="checkbox" name="checkbox-1" id="checkbox-1" class="custom" />
+			   <label for="checkbox-1">I agree</label>
+			   <input type="checkbox" name="checkbox-2" id="checkbox-2" class="custom" />
+			   <label for="checkbox-2">I agree not</label>
+			   <input type="checkbox" name="checkbox-3" id="checkbox-3" class="custom" />
+			   <label for="checkbox-3">I agree maybe</label>
+		    </fieldset>
+		    
+		    <div data-role="fieldcontain">
+				<label for="select-choice-a" class="select">Choose shipping method:</label>
+				<select name="select-choice-a" id="select-choice-a" data-native-menu="false">
+					<option>Custom menu example</option>
+					<option value="standard">Standard: 7 day</option>
+					<option value="rush">Rush: 3 days</option>
+					<option value="express">Express: next day</option>
+					<option value="overnight">Overnight</option>
+				</select>
+			</div>
+			
+			<fieldset class="ui-grid-a">
+				<div class="ui-block-a"><a href="#" data-role="button" data-rel="back" data-theme="b">Ok</a></div>
+				<div class="ui-block-b"><a href="#" data-role="button" data-rel="back" data-theme="c">Cancel</a></div>
+	    	</fieldset>   
+		</div>
+	</div>
