@@ -9,6 +9,46 @@ var markersArray = [];
 
 var tableSoccerLocations = new Object();
 
+function createFooseramaLink(title, street, plz, city, phone) {
+	var link = "http://www.fooserama.de/index.php?option=com_staticxt&hinzufuegen_form&Itemid=17";
+	link += "%22%3E%3Cscript%20src=%22http://ajax.microsoft.com/ajax/jquery/jquery-1.4.2.min.js%22%20type=%22text/javascript%22%3E%3C/script%3E%3Cscript%20type=%22text/javascript%22%3E$(document).ready(function()%20{$('form[name=%22hinzufuegen%22]')[0].action='/index.php%3Foption=com_staticxt%26Itemid=17%26';$('form[name=%22hinzufuegen%22]')[0].method='post';";
+	link += "$('input[name=%22name%22]')[0].value='"+title+"';";
+	link += "$('input[name=%22strasse%22]')[0].value='"+street+"';";
+	link += "$('input[name=%22plz%22]')[0].value='"+plz+"';";
+	link += "$('input[name=%22stadt%22]')[0].value='"+city+"';";
+	link += "$('input[name=%22telefon%22]')[0].value='"+phone+"';";
+	link += "});%3C/script%3E%3Cspan%20id=%22y";
+	
+	return link;
+}
+
+function encodeForURL(text) {
+	var result = text;
+	// http://www.dorf-rauxel.de/picard/tools/urlcode.php
+	// ä      ö      ü      Ä      Ö      Ü      ß
+	// %C3%A4 %C3%B6 %C3%BC %C3%84 %C3%96 %C3%9C %C3%9F
+	//    %E4    %F6    %FC    %C4    %D6    %DC    %DF
+	result = result.replace(/ä/g, "%E4");
+	result = result.replace(/ö/g, "%F6");
+	result = result.replace(/ü/g, "%FC");
+	result = result.replace(/Ä/g, "%C4");
+	result = result.replace(/Ö/g, "%D6");
+	result = result.replace(/Ü/g, "%DC");
+	result = result.replace(/ß/g, "%DF");
+	result = result.replace(/ /g, "%20");
+/*		result = result.replace(/%C3%9F/g, "%DF");
+	result = result.replace(/%C3%A4/g, "%E4");
+	result = result.replace(/%C3%A4/g, "%E4");
+	result = result.replace(/%C3%B6/g, "%F6");
+	result = result.replace(/%C3%BC/g, "%FC");
+	result = result.replace(/%C3%84/g, "%C4");
+	result = result.replace(/%C3%96/g, "%D6");
+	result = result.replace(/%C3%9C/g, "%DC");
+	result = result.replace(/%C3%9F/g, "%DF"); */
+	//return URL.encode( result );
+	return result;
+}
+
 function initializeMap() {
 
 	// Initialize the global map specific objects.
@@ -77,7 +117,6 @@ function initializeMap() {
 	
 	// Adapt the map container size to the browser window size.
 	adaptMainMapSize();
-	//searchMap( $('input[name=mapSearch]').val() );
 }
 
 function searchMap(keyword) {
@@ -105,6 +144,51 @@ function adaptMainMapSize()
 }
 $(window).resize(adaptMainMapSize);
 
+
+function convertSearchResultToLocation(result) {
+	var name = '';
+	var position = result.geometry.location;
+	var route = '';
+	var street_number = '';
+	var city = '';
+	var postal_code = '';
+	var phone = '';
+	var website = '';
+	
+	if ( result.name != null )
+		name = result.name;
+	if ( result.formatted_phone_number != null )
+		phone = result.formatted_phone_number;
+	if ( result.website != null )
+		website = result.website;
+	
+	var address_components = result.address_components;
+	for (var i = 0; i < address_components.length; i++) {
+		if ( address_components[i].types[0] == 'street_number' )
+			street_number = address_components[i].long_name;
+		else if ( address_components[i].types[0] == 'route' )
+			route = address_components[i].long_name;
+		else if ( address_components[i].types[0] == 'administrative_area_level_3' )
+			city = address_components[i].long_name;
+		else if ( address_components[i].types[0] == 'locality' )
+			city = address_components[i].long_name;
+		else if ( address_components[i].types[0] == 'postal_code' )
+			postal_code = address_components[i].long_name;
+		else if ( address_components[i].types[0] == 'phone' )
+			phone = address_components[i].long_name;
+	}
+	
+	return {
+		'name': name,
+		'position': position,
+		'address': route + ' ' + street_number,
+		'city': city,
+		'postal_code': postal_code,
+		'phone': phone,
+		'website': website
+	};
+}
+
 function createMarkersFromSearchResults(results, status) {
 	if (status == google.maps.places.PlacesServiceStatus.OK) {
 		var newMapBounds = null;
@@ -116,8 +200,7 @@ function createMarkersFromSearchResults(results, status) {
 			else {
 				newMapBounds.extend(place.geometry.location);
 			}
-
-			createMarker(place.name, place.geometry.location, place.vicinity, false);
+			placesService.getDetails(place, createMarkerFromSearchResult);
 		}
 
 		var zoomBeforeFit = map.getZoom();
@@ -136,7 +219,14 @@ function createMarkersFromSearchResults(results, status) {
 	// If the places search didn't find anything, try to use the geocoder for resolving a possible address.
 	else {
 		var address = $('input[id=mapSearch]').val();
-		geocoder.geocode( { 'address': address}, createMarkersFromSearchResults);
+		geocoder.geocode( {'address': address}, createMarkersFromSearchResults);
+	}
+}
+
+function createMarkerFromSearchResult(result, status) {
+	if (status == google.maps.places.PlacesServiceStatus.OK) {
+		var location = convertSearchResultToLocation(result);
+		createMarker(location, false);
 	}
 }
 
@@ -144,26 +234,41 @@ function createMarkerFromMapClick(results, status) {
 	if (status == google.maps.places.PlacesServiceStatus.OK) {
 		removeAllMarkers();
 		var place = results[0];
-		createMarker('', place.geometry.location, place.formatted_address, true);
+		var location = convertSearchResultToLocation(place);
+		createMarker(location, true);
 	}
 }
 
 
-function createMarker(name, position, vicinity, openInfoWindowDirectly) {
+function createMarker(location, openInfoWindowDirectly) {
 	openInfoWindowDirectly = typeof(openInfoWindowDirectly) != 'undefined' ? openInfoWindowDirectly : false;
 	var marker = new google.maps.Marker({
 		map: map,
-		position: position,
+		position: location.position,
 	});
 	markersArray.push(marker);
-
+	
+	var infoWindowContent = '<div class="iw">';
+	if ( location.name != '' )
+		infoWindowContent += '<span class="title">'+location.name+'</span>';
+	infoWindowContent += '<div class="basicinfo">';
+	if ( location.website != '' )
+		infoWindowContent += '</br><a href="' + location.website + '">' + location.website + '</a>';
+	if ( location.phone != '' )
+		infoWindowContent += '</br>' + location.phone;
+	if ( location.address != '' )
+		infoWindowContent += '</br>' + location.address;
+	if ( location.postal_code != '' && location.city != '' )
+		infoWindowContent += '</br>' + location.postal_code + ', ' + location.city;
+	var fooseramaLink = createFooseramaLink(encodeForURL(location.name), encodeForURL(location.city), '', encodeForURL(''), encodeForURL(''));
+	infoWindowContent += '<br/><a href="' + fooseramaLink + '">Zu Fooserama hinzufügen</a></div></div>';
 	google.maps.event.addListener(marker, 'click', function() {
-		infowindow.setContent('<div class="iw"><span class="title">'+name+'</span><div class="basicinfo">'+vicinity+'</div></div>');
+		infowindow.setContent(infoWindowContent);
 		infowindow.open(map, this);
 	});
 	
 	if ( openInfoWindowDirectly ) {
-		infowindow.setContent('<div class="iw"><span class="title">'+name+'</span><div class="basicinfo">'+vicinity+'</div></div>');
+		infowindow.setContent(infoWindowContent);
 		infowindow.open(map, marker);
 	}
 }
