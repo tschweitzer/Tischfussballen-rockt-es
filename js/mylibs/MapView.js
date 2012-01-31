@@ -244,7 +244,7 @@ function createMarker(location, openInfoWindowDirectly) {
 	openInfoWindowDirectly = typeof(openInfoWindowDirectly) != 'undefined' ? openInfoWindowDirectly : false;
 	var marker = new google.maps.Marker({
 		map: map,
-		position: location.position,
+		position: location.position
 	});
 	markersArray.push(marker);
 	
