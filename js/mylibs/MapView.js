@@ -321,5 +321,3 @@ function createTableSoccerLocationMarker(tableSoccerLocation) {
 		infowindow.open(map, this);
 	});
 }
-
-google.maps.event.addDomListener(window, 'load', initializeMap);

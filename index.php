@@ -145,6 +145,8 @@
 			    }
 		    });
 		    
+		    initializeMap();
+		    
 		    jqmSimpleMessage('This is just a test!');
 	  }); 
 	</script>
