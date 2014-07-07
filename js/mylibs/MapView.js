@@ -63,6 +63,7 @@ function initializeMap() {
 	map = new google.maps.Map(document.getElementById('map_canvas'), myOptions);
 	geocoder = new google.maps.Geocoder();
 	infowindow = new google.maps.InfoWindow();
+	// Places api docs here: https://developers.google.com/maps/documentation/javascript/places
 	placesService = new google.maps.places.PlacesService(map);
 
 	
@@ -87,8 +88,8 @@ function initializeMap() {
 		var west = map.getBounds().getSouthWest().lng();
 		//$.getJSON('TablesoccerLocationHandler.php?north=52.50091&south=51.22821&west=12.77329&east=13.32118', function(data) {
 		$.getJSON('TablesoccerLocationHandler.php?north='+north+'&south='+south+'&west='+west+'&east='+east, function(data) {
-			console.log('here comes json');
-			console.log(data);
+			log('here comes loading locations json');
+			log(data);
 
 			for (var i = 0; i < data.length; i++) {
 				var id = 0;
@@ -111,7 +112,7 @@ function initializeMap() {
 	});
 	
 	google.maps.event.addListener(map, 'click', function(event) {
-		geocoder.geocode( { 'location': event.latLng}, createMarkerFromMapClick);
+		geocoder.geocode({'location': event.latLng}, createMarkerFromMapClick);
 	});
 
 	
@@ -125,7 +126,7 @@ function searchMap(keyword) {
 			bounds: map.getBounds(),
 			keyword: keyword
 	};
-	placesService.search(request, createMarkersFromSearchResults);
+	placesService.nearbySearch(request, createMarkersFromSearchResults);
 }
 
 function removeAllMarkers() {
@@ -189,8 +190,15 @@ function convertSearchResultToLocation(result) {
 	};
 }
 
-function createMarkersFromSearchResults(results, status) {
-	if (status == google.maps.places.PlacesServiceStatus.OK) {
+function createMarkersFromGeocoderResults(results, status) {
+	createMarkersFromSearchResults(results, status, undefined, true);
+}
+
+function createMarkersFromSearchResults(results, status, pagination, fromGeocoder) {
+	// Set default value to false for check whether called from Geocoder
+	fromGeocoder = typeof fromGeocoder !== 'undefined' ? fromGeocoder : false;
+	
+	if (status == google.maps.places.PlacesServiceStatus.OK || status == google.maps.GeocoderStatus.OK) {
 		var newMapBounds = null;
 		for (var i = 0; i < results.length; i++) {
 			var place = results[i];
@@ -200,7 +208,10 @@ function createMarkersFromSearchResults(results, status) {
 			else {
 				newMapBounds.extend(place.geometry.location);
 			}
-			placesService.getDetails(place, createMarkerFromSearchResult);
+			// Results from geocoder do not have a place_id.
+			if (place.hasOwnProperty('place_id')) {
+				placesService.getDetails(place, createMarkerFromSearchResult);
+			}
 		}
 
 		var zoomBeforeFit = map.getZoom();
@@ -209,7 +220,7 @@ function createMarkersFromSearchResults(results, status) {
 		else
 			map.panToBounds(newMapBounds);
 
-		map.fitToBounds(newMapBounds);
+		map.fitBounds(newMapBounds);
 
 		if ( map.getZoom() > zoomBeforeFit )
 			map.setZoom(zoomBeforeFit);
@@ -217,9 +228,12 @@ function createMarkersFromSearchResults(results, status) {
 			map.setZoom(14);
 	}
 	// If the places search didn't find anything, try to use the geocoder for resolving a possible address.
-	else {
+	else if (!fromGeocoder) {
 		var address = $('input[id=mapSearch]').val();
-		geocoder.geocode( {'address': address}, createMarkersFromSearchResults);
+		geocoder.geocode({'address': address}, createMarkersFromGeocoderResults);
+	}
+	else {
+		alert('No results found');
 	}
 }
 

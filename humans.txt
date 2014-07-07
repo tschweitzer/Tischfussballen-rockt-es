@@ -3,18 +3,16 @@
 
 
 /* TEAM */
-  <your title>: <your name>
-  Site:
-  Twitter:
-  Location:
+  Author: Thomas Schweitzer
+  Site: http://tischfussballen.rockt.es/
 
 /* THANKS */
   Names (& URL):
 
 /* SITE */
   Standards: HTML5, CSS3
-  Components: Modernizr, jQuery
-  Software:
+  Components: Modernizr, jQuery, jQueryMobile, GMaps
+  Software: Eclipse Aptana Studio
 
 
 
